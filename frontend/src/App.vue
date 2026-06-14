@@ -56,6 +56,20 @@
           <p>赤纬: {{ store.selectedStar.dec.toFixed(2) }}°</p>
           <p>视星等: {{ store.selectedStar.mag }}</p>
           <p>光谱型: {{ store.selectedStar.spectral }}</p>
+          <div class="border-t border-gray-700 my-2 pt-2">
+            <p v-if="starVisibility.isVisible" class="text-green-400 font-semibold">
+              ✓ 可见（地平线上方）
+            </p>
+            <p v-else class="text-red-400 font-semibold">
+              ✗ 不可见（已落到地平线以下）
+            </p>
+            <p class="text-gray-400 mt-1">
+              高度角: {{ starVisibility.altitude.toFixed(1) }}°
+            </p>
+            <p class="text-gray-400">
+              方位角: {{ starVisibility.azimuth.toFixed(1) }}°（{{ starVisibility.direction }}）
+            </p>
+          </div>
         </div>
       </div>
 
@@ -80,11 +94,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useSkyStore } from './store/sky'
 import StarCanvas from './components/StarCanvas.vue'
 
 const store = useSkyStore()
 const dateStr = ref(new Date().toISOString().slice(0, 16))
 function updateDate() { store.viewDate = new Date(dateStr.value) }
+
+const starVisibility = computed(() => {
+  if (!store.selectedStar) {
+    return { altitude: 0, azimuth: 0, isVisible: false, direction: '北' }
+  }
+  return store.getStarHorizontalCoords(store.selectedStar)
+})
 </script>

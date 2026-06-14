@@ -58,6 +58,32 @@ export const useSkyStore = defineStore('sky', () => {
     return colors[spectral] || '#ffffff'
   }
 
+  function getStarHorizontalCoords(star: Star) {
+    const ha = (localSiderealTime.value - star.ra) * 15 * Math.PI / 180
+    const decRad = star.dec * Math.PI / 180
+    const latRad = latitude.value * Math.PI / 180
+
+    const alt = Math.asin(Math.sin(decRad) * Math.sin(latRad) + Math.cos(decRad) * Math.cos(latRad) * Math.cos(ha))
+    const az = Math.atan2(-Math.cos(decRad) * Math.sin(ha), Math.sin(decRad) * Math.cos(latRad) - Math.cos(decRad) * Math.sin(latRad) * Math.cos(ha))
+
+    const altDeg = alt * 180 / Math.PI
+    let azDeg = az * 180 / Math.PI
+    if (azDeg < 0) azDeg += 360
+
+    const isVisible = altDeg > 0
+
+    const directionNames = ['北', '东北', '东', '东南', '南', '西南', '西', '西北']
+    const dirIndex = Math.round(azDeg / 45) % 8
+    const direction = directionNames[dirIndex]
+
+    return {
+      altitude: altDeg,
+      azimuth: azDeg,
+      isVisible,
+      direction
+    }
+  }
+
   function selectStar(x: number, y: number, cx: number, cy: number, scale: number) {
     let closest: Star | null = null
     let minDist = 20
@@ -72,7 +98,7 @@ export const useSkyStore = defineStore('sky', () => {
   return {
     viewDate, zoom, panX, panY, showLabels, showConstLines, showGrid,
     selectedStar, searchQuery, latitude, localSiderealTime, filteredStars,
-    projectStar, starRadius, spectralColor, selectStar,
+    projectStar, starRadius, spectralColor, selectStar, getStarHorizontalCoords,
     STARS, CONSTELLATIONS
   }
 })
